@@ -15,10 +15,12 @@ public abstract class WasmNameSubsection implements StructConverter {
 	private LEB128 contentLength;
 	private long sectionOffset;
 
-	public enum WasmNameSubsectionId {
-		NAME_MODULE,
-		NAME_FUNCTION,
-		NAME_LOCAL
+	public static interface WasmNameSubsectionId {
+		public static final int NAME_MODULE = 0;
+		public static final int NAME_FUNCTION = 1;
+		public static final int NAME_LOCAL = 2;
+		public static final int NAME_GLOBAL = 7;
+		public static final int NAME_DATA = 9;
 	}
 
 	public static WasmNameSubsection createSubsection(BinaryReader reader) throws IOException {
@@ -29,19 +31,19 @@ public abstract class WasmNameSubsection implements StructConverter {
 
 		BinaryReader sectionReader = reader.clone(sectionOffset);
 
-		if (id >= WasmNameSubsectionId.values().length) {
-			return new WasmNameUnknownSubsection(sectionReader);
-		}
-
-		switch (WasmNameSubsectionId.values()[id]) {
-		case NAME_MODULE:
+		switch (id) {
+		case WasmNameSubsectionId.NAME_MODULE:
 			return new WasmNameModuleSubsection(sectionReader);
-		case NAME_FUNCTION:
-			return new WasmNameFunctionSubsection(sectionReader);
-		case NAME_LOCAL:
+		case WasmNameSubsectionId.NAME_FUNCTION:
+			return new WasmNameMapSubsection("function", sectionReader);
+		case WasmNameSubsectionId.NAME_LOCAL:
 			return new WasmNameLocalSubsection(sectionReader);
+		case WasmNameSubsectionId.NAME_GLOBAL:
+			return new WasmNameMapSubsection("global", sectionReader);
+		case WasmNameSubsectionId.NAME_DATA:
+			return new WasmNameMapSubsection("data", sectionReader);
 		default:
-			return null;
+			return new WasmNameUnknownSubsection(sectionReader);
 		}
 	}
 
@@ -64,11 +66,8 @@ public abstract class WasmNameSubsection implements StructConverter {
 
 	protected abstract void addToStructure(StructureBuilder builder) throws DuplicateNameException, IOException;
 
-	public WasmNameSubsectionId getId() {
-		if (id < WasmNameSubsectionId.values().length) {
-			return WasmNameSubsectionId.values()[id];
-		}
-		return null;
+	public int getId() {
+		return id;
 	}
 
 	public long getSectionOffset() {

@@ -28,7 +28,7 @@ public class WasmNameIndirectMap implements StructConverter {
 		for (int i = 0; i < count.asLong(); i++) {
 			WasmIndirectAssoc assoc = new WasmIndirectAssoc();
 			assoc.idx = LEB128.readUnsignedValue(reader);
-			assoc.nameMap = new WasmNameMap(reader);
+			assoc.nameMap = new WasmNameMap("namemap_func_"+i+"_locals",reader);
 			entries.add(assoc);
 			map.put(assoc.idx.asLong(), assoc.nameMap);
 		}

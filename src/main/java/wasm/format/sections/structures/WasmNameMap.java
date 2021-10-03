@@ -14,6 +14,8 @@ import ghidra.util.exception.DuplicateNameException;
 import wasm.format.StructureBuilder;
 
 public class WasmNameMap implements StructConverter {
+	// this is used to avoid structure name conflict
+	private String structureName;
 	private LEB128 count;
 	private List<WasmAssoc> entries = new ArrayList<>();
 	private Map<Long, WasmName> map = new HashMap<>();
@@ -23,7 +25,8 @@ public class WasmNameMap implements StructConverter {
 		WasmName name;
 	}
 
-	public WasmNameMap(BinaryReader reader) throws IOException {
+	public WasmNameMap(String structureName, BinaryReader reader) throws IOException {
+		this.structureName = structureName;
 		count = LEB128.readUnsignedValue(reader);
 		for (int i = 0; i < count.asLong(); i++) {
 			WasmAssoc assoc = new WasmAssoc();
@@ -43,7 +46,7 @@ public class WasmNameMap implements StructConverter {
 
 	@Override
 	public DataType toDataType() throws DuplicateNameException, IOException {
-		StructureBuilder builder = new StructureBuilder("namemap");
+		StructureBuilder builder = new StructureBuilder(structureName);
 		builder.add(count, "count");
 		for (int i = 0; i < entries.size(); i++) {
 			WasmAssoc assoc = entries.get(i);
