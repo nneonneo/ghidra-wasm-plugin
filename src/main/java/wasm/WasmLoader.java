@@ -198,6 +198,13 @@ public class WasmLoader extends AbstractLibrarySupportLoader {
 
 	public static String getGlobalName(Program program, WasmModule module, int globalidx) {
 		String name;
+		WasmNameSection nameSection = module.getNameSection();
+		if (nameSection != null) {
+			name = nameSection.getGlobalName(globalidx);
+			if (name != null) {
+				return name;
+			}
+		}
 		name = getObjectName(program, module, WasmExternalKind.EXT_GLOBAL, globalidx);
 		if (name != null) {
 			return name;
