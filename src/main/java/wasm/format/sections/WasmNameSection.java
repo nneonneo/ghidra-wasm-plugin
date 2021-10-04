@@ -2,7 +2,7 @@ package wasm.format.sections;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,12 +13,11 @@ import wasm.format.sections.structures.WasmNameLocalSubsection;
 import wasm.format.sections.structures.WasmNameMapSubsection;
 import wasm.format.sections.structures.WasmNameModuleSubsection;
 import wasm.format.sections.structures.WasmNameSubsection;
-import wasm.format.sections.structures.WasmNameSubsection.WasmNameSubsectionId;
-import wasm.format.sections.structures.WasmNameUnknownSubsection;
+import wasm.format.sections.structures.WasmNameSubsection.WasmNameSubsectionId;;
 
 public class WasmNameSection extends WasmCustomSection {
 	private List<WasmNameSubsection> subsections = new ArrayList<>();
-	private Map<Integer, WasmNameSubsection> subsectionMap = new HashMap<>();
+	private Map<WasmNameSubsectionId, WasmNameSubsection> subsectionMap = new EnumMap<>(WasmNameSubsectionId.class);
 
 	public WasmNameSection(BinaryReader reader) throws IOException {
 		super(reader);
@@ -28,7 +27,7 @@ public class WasmNameSection extends WasmCustomSection {
 			if (subsection == null)
 				continue;
 			subsections.add(subsection);
-			if (!(subsection instanceof WasmNameUnknownSubsection))
+			if (subsection.getId() != null)
 				subsectionMap.put(subsection.getId(), subsection);
 		}
 	}

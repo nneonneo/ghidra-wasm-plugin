@@ -15,12 +15,18 @@ public abstract class WasmNameSubsection implements StructConverter {
 	private LEB128 contentLength;
 	private long sectionOffset;
 
-	public static interface WasmNameSubsectionId {
-		public static final int NAME_MODULE = 0;
-		public static final int NAME_FUNCTION = 1;
-		public static final int NAME_LOCAL = 2;
-		public static final int NAME_GLOBAL = 7;
-		public static final int NAME_DATA = 9;
+	// see https://github.com/WebAssembly/extended-name-section/blob/main/proposals/extended-name-section/Overview.md
+	public enum WasmNameSubsectionId {
+		NAME_MODULE,
+		NAME_FUNCTION,
+		NAME_LOCAL,
+		NAME_LABELS,
+		NAME_TYPE, 
+		NAME_TABLE, 
+		NAME_MEMORY, 
+		NAME_GLOBAL, 
+		NAME_ELEM,
+		NAME_DATA
 	}
 
 	public static WasmNameSubsection createSubsection(BinaryReader reader) throws IOException {
@@ -31,16 +37,31 @@ public abstract class WasmNameSubsection implements StructConverter {
 
 		BinaryReader sectionReader = reader.clone(sectionOffset);
 
-		switch (id) {
-		case WasmNameSubsectionId.NAME_MODULE:
+		if (id >= WasmNameSubsectionId.values().length) {
+			return new WasmNameUnknownSubsection(sectionReader);
+		}
+
+		switch (WasmNameSubsectionId.values()[id]) {
+		case NAME_MODULE:
 			return new WasmNameModuleSubsection(sectionReader);
-		case WasmNameSubsectionId.NAME_FUNCTION:
+		case NAME_FUNCTION:
 			return new WasmNameMapSubsection("function", sectionReader);
-		case WasmNameSubsectionId.NAME_LOCAL:
+		case NAME_LOCAL:
 			return new WasmNameLocalSubsection(sectionReader);
-		case WasmNameSubsectionId.NAME_GLOBAL:
+		case NAME_LABELS:
+			// not supported at the moment
+			return new WasmNameUnknownSubsection(sectionReader);
+		case NAME_TYPE:
+			return new WasmNameMapSubsection("type", sectionReader);
+		case NAME_TABLE:
+			return new WasmNameMapSubsection("table", sectionReader);
+		case NAME_MEMORY:
+			return new WasmNameMapSubsection("memory", sectionReader);
+		case NAME_GLOBAL:
 			return new WasmNameMapSubsection("global", sectionReader);
-		case WasmNameSubsectionId.NAME_DATA:
+		case NAME_ELEM:
+			return new WasmNameMapSubsection("elem", sectionReader);
+		case NAME_DATA:
 			return new WasmNameMapSubsection("data", sectionReader);
 		default:
 			return new WasmNameUnknownSubsection(sectionReader);
@@ -66,8 +87,11 @@ public abstract class WasmNameSubsection implements StructConverter {
 
 	protected abstract void addToStructure(StructureBuilder builder) throws DuplicateNameException, IOException;
 
-	public int getId() {
-		return id;
+	public WasmNameSubsectionId getId() {
+		if (id < WasmNameSubsectionId.values().length) {
+			return WasmNameSubsectionId.values()[id];
+		}
+		return null;
 	}
 
 	public long getSectionOffset() {
