@@ -4,12 +4,17 @@ import ghidra.program.model.address.Address;
 import wasm.format.WasmEnums.ValType;
 
 public class WasmFuncSignature {
+	private int funcidx;
 	private ValType[] params;
 	private ValType[] returns;
 	private String name;
 	private Address startAddr;
 	private Address endAddr; // address of last byte in the function (inclusive)
 	private ValType[] locals;
+
+	public int getFuncidx() {
+		return funcidx;
+	}
 
 	public ValType[] getParams() {
 		return params;
@@ -39,15 +44,17 @@ public class WasmFuncSignature {
 		return locals == null;
 	}
 
-	public WasmFuncSignature(ValType[] paramTypes, ValType[] returnTypes, String name, Address addr) {
+	public WasmFuncSignature(int funcidx, ValType[] paramTypes, ValType[] returnTypes, String name, Address addr) {
+		this.funcidx = funcidx;
 		this.name = name;
 		this.startAddr = addr;
 		this.params = paramTypes;
 		this.returns = returnTypes;
 	}
 
-	public WasmFuncSignature(ValType[] paramTypes, ValType[] returnTypes, String name, Address startAddr, Address endAddr, ValType[] locals) {
-		this(paramTypes, returnTypes, name, startAddr);
+	public WasmFuncSignature(int funcidx, ValType[] paramTypes, ValType[] returnTypes, String name, Address startAddr,
+			Address endAddr, ValType[] locals) {
+		this(funcidx, paramTypes, returnTypes, name, startAddr);
 		this.endAddr = endAddr;
 		this.locals = locals;
 	}
