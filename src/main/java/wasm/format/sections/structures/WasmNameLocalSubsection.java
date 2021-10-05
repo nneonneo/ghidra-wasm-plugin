@@ -1,6 +1,7 @@
 package wasm.format.sections.structures;
 
 import java.io.IOException;
+import java.util.Map;
 
 import ghidra.app.util.bin.BinaryReader;
 import ghidra.util.exception.DuplicateNameException;
@@ -17,6 +18,10 @@ public class WasmNameLocalSubsection extends WasmNameSubsection {
 
 	public String getLocalName(int funcidx, int localidx) {
 		return localNameMap.getEntry(funcidx, localidx);
+	}
+
+	public Map<Long, String> getLocalNames(int funcidx) {
+		return localNameMap.getNameMapping(funcidx);
 	}
 
 	@Override

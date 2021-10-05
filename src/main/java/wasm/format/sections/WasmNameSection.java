@@ -75,6 +75,17 @@ public class WasmNameSection extends WasmCustomSection {
 		return ((WasmNameMapSubsection) subsection).getName(idx);
 	}
 
+	public Map<Long, String> getLocalNames(int funcidx) {
+		WasmNameSubsection subsection = subsectionMap.get(WasmNameSubsectionId.NAME_LOCAL);
+		if (subsection == null)
+			return null;
+		return ((WasmNameLocalSubsection) subsection).getLocalNames(funcidx);
+	}
+
+	public boolean hasNameSubSection(WasmNameSubsectionId nameSubsectionId) {
+		return subsectionMap.containsKey(nameSubsectionId);
+	}
+
 	@Override
 	public String getName() {
 		return ".name";
