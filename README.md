@@ -12,17 +12,10 @@ Module to load WebAssembly files into Ghidra, supporting disassembly and decompi
 ## Tips
 
 - Many Wasm programs, especially those compiled by Emscripten or Clang, use a
-global variable to store the C stack pointer. Real programs often make heavy use
-of the C stack; it's the only place to store variables that are larger than a
-single u32/u64, for example, or variables which require physical memory
-addresses. In order to allow Ghidra to analyze the C stack, set the "C Stack
-Pointer" in the Wasm Pre-Analyzer settings during initial analysis to the index
-of the global variable which is being used as the stack pointer (this will be
-the global used in the `stackSave`/`stackRestore` functions, if present, or the
-global used in the function prologue of any functions which use the C stack).
-Setting this option will cause Ghidra to analyze global.set/global.get
-operations involving the targeted global as stack pointer manipulations, which
-will allow the decompiler to recover C stack variables and objects.
+global variable to store the C stack pointer. This plugin will attempt to
+automatically detect the C stack pointer during analysis; if it fails, you may
+need to set it yourself before performing initial analysis by setting the "C
+Stack Pointer" in the Wasm Pre-Analyzer settings.
 - By default, the C stack is assumed to grow in the negative direction, i.e.
 towards smaller addresses. However, compilers are actually free to choose either
 stack direction, and both positive and negative-growing stacks have been

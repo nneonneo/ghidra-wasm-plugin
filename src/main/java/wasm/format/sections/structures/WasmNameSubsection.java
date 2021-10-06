@@ -49,7 +49,7 @@ public abstract class WasmNameSubsection implements StructConverter {
 		case NAME_LOCAL:
 			return new WasmNameLocalSubsection(sectionReader);
 		case NAME_LABELS:
-			// not supported at the moment
+			// TODO: not supported at the moment
 			return new WasmNameUnknownSubsection(sectionReader);
 		case NAME_TYPE:
 			return new WasmNameMapSubsection("type", sectionReader);
