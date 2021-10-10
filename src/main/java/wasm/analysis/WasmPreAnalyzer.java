@@ -148,7 +148,7 @@ public class WasmPreAnalyzer extends AbstractAnalyzer {
 			monitor.incrementProgress(1);
 
 			WasmFuncSignature func = state.getFunctionByAddress(function.getEntryPoint());
-			if (func.isImport()) {
+			if (func == null || func.isImport()) {
 				continue;
 			}
 			WasmFunctionAnalysis funcAnalysis = state.getFunctionAnalysis(function);

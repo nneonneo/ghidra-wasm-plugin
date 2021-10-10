@@ -40,9 +40,11 @@ import ghidra.program.model.data.DataUtilities.ClearDataMode;
 import ghidra.program.model.lang.LanguageCompilerSpecPair;
 import ghidra.program.model.listing.CodeUnit;
 import ghidra.program.model.listing.Data;
+import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Listing;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.mem.MemoryBlock;
+import ghidra.program.model.symbol.ExternalLocation;
 import ghidra.program.model.symbol.Namespace;
 import ghidra.program.model.symbol.RefType;
 import ghidra.program.model.symbol.SourceType;
@@ -341,6 +343,27 @@ public class WasmLoader extends AbstractLibrarySupportLoader {
 	}
 	// #endregion
 
+	public void createImportExportSymbols(Program program, WasmModule module, int funcidx, Function function) throws Exception {
+
+		List<WasmImportEntry> imports = module.getImports(WasmExternalKind.EXT_FUNCTION);
+		// imported function
+		if (funcidx < imports.size()) {
+			WasmImportEntry importEntry = imports.get(funcidx);
+			// create Import symbol
+			ExternalLocation extLoc = program.getExternalManager().addExtFunction(
+					importEntry.getModule(), importEntry.getName(), function.getEntryPoint(),
+					SourceType.IMPORTED);
+			function.setThunkedFunction(extLoc.getFunction());
+			return;
+		}
+
+		WasmExportEntry entry = module.findExport(WasmExternalKind.EXT_FUNCTION, funcidx);
+		// exported function
+		if (entry != null) {
+			program.getSymbolTable().addExternalEntryPoint(function.getEntryPoint());
+		}
+	}
+
 	private void loadFunctions(Program program, FileBytes fileBytes, WasmModule module, TaskMonitor monitor) {
 		monitor.setMessage("Loading functions");
 		List<WasmImportEntry> imports = module.getImports(WasmExternalKind.EXT_FUNCTION);
@@ -376,8 +399,13 @@ public class WasmLoader extends AbstractLibrarySupportLoader {
 
 			try {
 				Symbol symbol = createLabel(program, startAddress, functionName, functionNamespace, SourceType.IMPORTED);
-				program.getFunctionManager().createFunction(symbol.getName(false), symbol.getParentNamespace(),
+				Function function = program.getFunctionManager().createFunction(symbol.getName(false), symbol.getParentNamespace(),
 						startAddress, new AddressSet(startAddress, startAddress.add(functionLength - 1)), SourceType.IMPORTED);
+				try {
+					createImportExportSymbols(program, module, funcidx, function);
+				} catch (Exception e) {
+					Msg.error(this, "Failed to create import/export symbol for function index " + funcidx + " (" + functionName + ") at " + startAddress, e);
+				}
 			} catch (Exception e) {
 				Msg.error(this, "Failed to create function index " + funcidx + " (" + functionName + ") at " + startAddress, e);
 			}
