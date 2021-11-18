@@ -3,11 +3,12 @@
 <!-- See Relax specification: Ghidra/Framework/SoftwareModeling/data/languages/processor_spec.rxg -->
 
 <processor_spec>
+  <data_space space="mem0" />
   <properties>
     <property key="pcodeInjectLibraryClass" value="wasm.pcode.PcodeInjectLibraryWasm"/>
   </properties>
   <inferptrbounds>
-    <range space="ram" first="0x400" last="0xffffffff"/>
+    <range space="mem0" first="0x400" last="0xffffffff"/>
   </inferptrbounds>
   <programcounter register="PC"/>
   <register_data>

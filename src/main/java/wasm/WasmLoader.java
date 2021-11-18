@@ -73,7 +73,7 @@ import wasm.format.sections.structures.WasmTableType;
 
 public class WasmLoader extends AbstractLibrarySupportLoader {
 
-	public final static long CODE_BASE = 0x80000000L;
+	public final static long CODE_BASE = 0L;
 
 	@Override
 	public String getName() {
@@ -129,7 +129,7 @@ public class WasmLoader extends AbstractLibrarySupportLoader {
 			throw new IllegalArgumentException("non-zero memidx is not supported");
 		}
 
-		return program.getAddressFactory().getAddressSpace("ram").getAddress(offset);
+		return program.getAddressFactory().getAddressSpace("mem0").getAddress(offset);
 	}
 
 	public static Address getGlobalAddress(Program program, int globalidx) {
@@ -517,7 +517,7 @@ public class WasmLoader extends AbstractLibrarySupportLoader {
 			} else {
 				mem = memories.get(memidx - imports.size());
 			}
-			createMemoryBlock(program, memidx, Math.min(mem.getInitial() * 65536L, CODE_BASE), monitor);
+			createMemoryBlock(program, memidx, mem.getInitial() * 65536L, monitor);
 		}
 	}
 

@@ -18,74 +18,74 @@ storeaddr: memalign memoffset is memalign; memoffset; sp2_32 {
 }
 
 :i32.load loadaddr is opc=0x28; loadaddr; sp1_32; ctx_is_case=0 {
-	sp1_32 = *:4 loadaddr;
+	sp1_32 = *[mem0]:4 loadaddr;
 }
 :i64.load loadaddr is opc=0x29; loadaddr; sp1_64; ctx_is_case=0 {
-	sp1_64 = *:8 loadaddr;
+	sp1_64 = *[mem0]:8 loadaddr;
 }
 :f32.load loadaddr is opc=0x2A; loadaddr; sp1_32; ctx_is_case=0 {
-	sp1_32 = *:4 loadaddr;
+	sp1_32 = *[mem0]:4 loadaddr;
 }
 :f64.load loadaddr is opc=0x2B; loadaddr; sp1_64; ctx_is_case=0 {
-	sp1_64 = *:8 loadaddr;
+	sp1_64 = *[mem0]:8 loadaddr;
 }
 :i32.load8_s loadaddr is opc=0x2C; loadaddr; sp1_32; ctx_is_case=0 {
-	sp1_32 = sext(*:1 loadaddr);
+	sp1_32 = sext(*[mem0]:1 loadaddr);
 }
 :i32.load8_u loadaddr is opc=0x2D; loadaddr; sp1_32; ctx_is_case=0 {
-	sp1_32 = zext(*:1 loadaddr);
+	sp1_32 = zext(*[mem0]:1 loadaddr);
 }
 :i32.load16_s loadaddr is opc=0x2E; loadaddr; sp1_32; ctx_is_case=0 {
-	sp1_32 = sext(*:2 loadaddr);
+	sp1_32 = sext(*[mem0]:2 loadaddr);
 }
 :i32.load16_u loadaddr is opc=0x2F; loadaddr; sp1_32; ctx_is_case=0 {
-	sp1_32 = zext(*:2 loadaddr);
+	sp1_32 = zext(*[mem0]:2 loadaddr);
 }
 :i64.load8_s loadaddr is opc=0x30; loadaddr; sp1_64; ctx_is_case=0 {
-	sp1_64 = sext(*:1 loadaddr);
+	sp1_64 = sext(*[mem0]:1 loadaddr);
 }
 :i64.load8_u loadaddr is opc=0x31; loadaddr; sp1_64; ctx_is_case=0 {
-	sp1_64 = zext(*:1 loadaddr);
+	sp1_64 = zext(*[mem0]:1 loadaddr);
 }
 :i64.load16_s loadaddr is opc=0x32; loadaddr; sp1_64; ctx_is_case=0 {
-	sp1_64 = sext(*:2 loadaddr);
+	sp1_64 = sext(*[mem0]:2 loadaddr);
 }
 :i64.load16_u loadaddr is opc=0x33; loadaddr; sp1_64; ctx_is_case=0 {
-	sp1_64 = zext(*:2 loadaddr);
+	sp1_64 = zext(*[mem0]:2 loadaddr);
 }
 :i64.load32_s loadaddr is opc=0x34; loadaddr; sp1_64; ctx_is_case=0 {
-	sp1_64 = sext(*:4 loadaddr);
+	sp1_64 = sext(*[mem0]:4 loadaddr);
 }
 :i64.load32_u loadaddr is opc=0x35; loadaddr; sp1_64; ctx_is_case=0 {
-	sp1_64 = zext(*:4 loadaddr);
+	sp1_64 = zext(*[mem0]:4 loadaddr);
 }
 
 :i32.store storeaddr is opc=0x36; storeaddr; sp1_32; ctx_is_case=0 {
-	*:4 storeaddr = sp1_32;
+	*[mem0]:4 storeaddr = sp1_32;
 }
 :i64.store storeaddr is opc=0x37; storeaddr; sp1_64; ctx_is_case=0 {
-	*:8 storeaddr = sp1_64;
+	*[mem0]:8 storeaddr = sp1_64;
 }
 :f32.store storeaddr is opc=0x38; storeaddr; sp1_32; ctx_is_case=0 {
-	*:4 storeaddr = sp1_32;
+	*[mem0]:4 storeaddr = sp1_32;
 }
 :f64.store storeaddr is opc=0x39; storeaddr; sp1_64; ctx_is_case=0 {
-	*:8 storeaddr = sp1_64;
+	*[mem0]:8 storeaddr = sp1_64;
 }
 :i32.store8 storeaddr is opc=0x3A; storeaddr; sp1_32; ctx_is_case=0 {
-	*:1 storeaddr = sp1_32:1;
+	*[mem0]:1 storeaddr = sp1_32:1;
 }
 :i32.store16 storeaddr is opc=0x3B; storeaddr; sp1_32; ctx_is_case=0 {
-	*:2 storeaddr = sp1_32:2;
+	*[mem0]:2 storeaddr = sp1_32:2;
 }
 :i64.store8 storeaddr is opc=0x3C; storeaddr; sp1_64; ctx_is_case=0 {
-	*:1 storeaddr = sp1_64:1;
+	*[mem0]:1 storeaddr = sp1_64:1;
 }
 :i64.store16 storeaddr is opc=0x3D; storeaddr; sp1_64; ctx_is_case=0 {
-	*:2 storeaddr = sp1_64:2;
+	*[mem0]:2 storeaddr = sp1_64:2;
 }
 :i64.store32 storeaddr is opc=0x3E; storeaddr; sp1_64; ctx_is_case=0 {
-	*:4 storeaddr = sp1_64:4;
+	*[mem0]:4 storeaddr = sp1_64:4;
 }
 
 ## Numeric Instructions
