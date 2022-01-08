@@ -81,7 +81,7 @@ def renameDyncalls(calltype):
         name = "func_" + calltype + "_%d" % i
         if func.name.startswith("unnamed_function_"):
             func.setName(name, SourceType.ANALYSIS)
-        currentProgram.symbolTable.createSymbol(func.entryPoint, name, dynCallNamespace, SourceType.USER_DEFINED)
+        currentProgram.symbolTable.createLabel(func.entryPoint, name, dynCallNamespace, SourceType.USER_DEFINED)
 
 for function in currentProgram.functionManager.getFunctions(True):
     if function.parentNamespace.name == "export" and function.name.startswith("dynCall_"):
