@@ -42,6 +42,13 @@ public class WasmNameIndirectMap implements StructConverter {
 		return subMap.getEntry(idx2);
 	}
 
+	public Map<Long, String> getNameMapping(long idx1) {
+		WasmNameMap subMap = map.get(idx1);
+		if (subMap == null)
+			return null;
+		return subMap.getMap();
+	}
+
 	@Override
 	public DataType toDataType() throws DuplicateNameException, IOException {
 		StructureBuilder builder = new StructureBuilder("indirectnamemap");
