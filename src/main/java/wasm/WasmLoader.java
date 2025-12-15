@@ -39,7 +39,7 @@ import ghidra.program.model.data.DataType;
 import ghidra.program.model.data.DataUtilities;
 import ghidra.program.model.data.DataUtilities.ClearDataMode;
 import ghidra.program.model.lang.LanguageCompilerSpecPair;
-import ghidra.program.model.listing.CodeUnit;
+import ghidra.program.model.listing.CommentType;
 import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Listing;
@@ -622,7 +622,7 @@ public class WasmLoader extends AbstractLibrarySupportLoader {
 				program.getReferenceManager().addMemoryReference(dataStart, initRef, RefType.DATA, SourceType.IMPORTED, 0);
 			}
 			if (initGlobal != null) {
-				int commentType = CodeUnit.PLATE_COMMENT;
+				CommentType commentType = CommentType.PLATE;
 				String currentComment = program.getListing().getComment(commentType, dataStart);
 				if (currentComment == null) {
 					currentComment = "";
