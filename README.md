@@ -16,7 +16,7 @@ Module to load WebAssembly files into Ghidra, supporting disassembly and decompi
 The easiest way to install the plugin is as a Ghidra extension. Grab a
 [release](https://github.com/nneonneo/ghidra-wasm-plugin/releases) that is
 compatible with your version of Ghidra - for example, if you're using Ghidra
-10.0.4, download the file beginning with `ghidra_10.0.4_PUBLIC`. You don't need
+12.0, download the file beginning with `ghidra_12.0_PUBLIC`. You don't need
 to unzip the file: simply launch Ghidra, go to "File -> Install Extensions",
 select the + icon, and select the zip file. Restart Ghidra to load the extension
 and you should be good to go. **Note:** if you upgrade your version of Ghidra,

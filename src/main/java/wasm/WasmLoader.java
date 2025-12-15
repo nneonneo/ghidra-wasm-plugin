@@ -27,6 +27,7 @@ import ghidra.app.util.bin.BinaryReader;
 import ghidra.app.util.bin.ByteProvider;
 import ghidra.app.util.importer.MessageLog;
 import ghidra.app.util.opinion.AbstractLibrarySupportLoader;
+import ghidra.app.util.opinion.Loader.ImporterSettings;
 import ghidra.app.util.opinion.LoadSpec;
 import ghidra.program.database.mem.FileBytes;
 import ghidra.program.model.address.Address;
@@ -667,15 +668,13 @@ public class WasmLoader extends AbstractLibrarySupportLoader {
 	}
 
 	@Override
-	protected void load(ByteProvider provider, LoadSpec loadSpec, List<Option> options,
-			Program program, TaskMonitor monitor, MessageLog log) throws IOException {
-
-		monitor.setMessage("Start loading");
+	protected void load(Program program, ImporterSettings settings) throws IOException {
+		settings.monitor().setMessage("Start loading");
 
 		try {
-			doLoad(provider, program, monitor);
+			doLoad(settings.provider(), program, settings.monitor());
 		} catch (Exception e) {
-			monitor.setMessage("Error");
+			settings.monitor().setMessage("Error");
 			Msg.error(this, "Failed to load Wasm module", e);
 		}
 	}
