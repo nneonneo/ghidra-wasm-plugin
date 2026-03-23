@@ -19,6 +19,7 @@ import java.io.IOException;
 
 import ghidra.app.util.bin.LEB128Info;
 import ghidra.app.util.bin.StructConverter;
+import ghidra.program.database.data.DataTypeUtilities;
 import ghidra.program.model.data.ArrayDataType;
 import ghidra.program.model.data.CategoryPath;
 import ghidra.program.model.data.DataType;
@@ -35,6 +36,22 @@ public class StructureBuilder {
 		}
 
 		/**
+		 * Ghidra 12.2 removed CompositeDataTypeImpl.checkAncestry(DataType), so keep
+		 * the pre-12.2 behavior locally instead of linking against the removed
+		 * method.
+		 */
+		private void checkAncestryCompat(DataType dataType) {
+			if (this.equals(dataType)) {
+				throw new IllegalArgumentException(
+					"Data type " + getDisplayName() + " can't contain itself.");
+			}
+			if (DataTypeUtilities.isSecondPartOfFirst(dataType, this)) {
+				throw new IllegalArgumentException("Data type " + dataType.getDisplayName() +
+					" has " + getDisplayName() + " within it.");
+			}
+		}
+
+		/**
 		 * Add a component to this structure. This function does not repack the
 		 * structure after adding, in order to avoid quadratic behaviour when adding a
 		 * large number of structure elements. To ensure correct behaviour, the
@@ -46,7 +63,7 @@ public class StructureBuilder {
 
 			dataType = dataType.clone(dataMgr);
 
-			checkAncestry(dataType);
+			checkAncestryCompat(dataType);
 
 			DataTypeComponentImpl dtc;
 			int offset = structLength;
