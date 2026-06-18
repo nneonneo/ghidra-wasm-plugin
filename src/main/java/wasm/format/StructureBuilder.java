@@ -19,11 +19,13 @@ import java.io.IOException;
 
 import ghidra.app.util.bin.LEB128Info;
 import ghidra.app.util.bin.StructConverter;
+import ghidra.program.database.data.DataTypeUtilities;
 import ghidra.program.model.data.ArrayDataType;
 import ghidra.program.model.data.CategoryPath;
 import ghidra.program.model.data.DataType;
 import ghidra.program.model.data.DataTypeComponent;
 import ghidra.program.model.data.DataTypeComponentImpl;
+import ghidra.program.model.data.DataTypeDependencyException;
 import ghidra.program.model.data.Structure;
 import ghidra.program.model.data.StructureDataType;
 import ghidra.util.exception.DuplicateNameException;
@@ -46,7 +48,11 @@ public class StructureBuilder {
 
 			dataType = dataType.clone(dataMgr);
 
-			checkAncestry(dataType);
+			try {
+				DataTypeUtilities.checkAncestry(this, dataType);
+			} catch (DataTypeDependencyException e) {
+				throw new IllegalArgumentException(e);
+			}
 
 			DataTypeComponentImpl dtc;
 			int offset = structLength;
