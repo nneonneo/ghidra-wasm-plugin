@@ -114,6 +114,10 @@ public class WasmAnalysis {
 		return module.getType(typeidx);
 	}
 
+	public WasmFuncType getTagType(int tagidx) {
+		return module.getTagType(tagidx);
+	}
+
 	public ValType getGlobalType(int globalidx) {
 		return module.getGlobalType(globalidx).getType();
 	}

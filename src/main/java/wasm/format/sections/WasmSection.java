@@ -42,7 +42,9 @@ public abstract class WasmSection implements StructConverter {
 		SEC_START,
 		SEC_ELEMENT,
 		SEC_CODE,
-		SEC_DATA
+		SEC_DATA,
+		SEC_DATACOUNT,
+		SEC_TAG		// exception handling
 	}
 	
 	public static WasmSection createSection(BinaryReader reader) throws IOException {
@@ -81,6 +83,8 @@ public abstract class WasmSection implements StructConverter {
 				return new WasmCodeSection(sectionReader);
 			case SEC_DATA:
 				return new WasmDataSection(sectionReader);
+			case SEC_TAG:
+				return new WasmTagSection(sectionReader);
 			default:
 				return null;
 		}

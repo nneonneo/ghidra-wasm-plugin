@@ -36,6 +36,7 @@ import wasm.format.sections.WasmLinearMemorySection;
 import wasm.format.sections.WasmNameSection;
 import wasm.format.sections.WasmSection;
 import wasm.format.sections.WasmSection.WasmSectionId;
+import wasm.format.sections.WasmTagSection;
 import wasm.format.sections.WasmStartSection;
 import wasm.format.sections.WasmTableSection;
 import wasm.format.sections.WasmTypeSection;
@@ -244,6 +245,20 @@ public class WasmModule {
 		} else {
 			return getNonImportedFunctions().get(funcidx - imports.size());
 		}
+	}
+
+	/** The function type of exception tag `tagidx` (imported tags first, then the tag section), or null. */
+	public WasmFuncType getTagType(int tagidx) {
+		List<WasmImportEntry> imports = getImports(WasmExternalKind.EXT_TAG);
+		if (tagidx < imports.size()) {
+			return getType(imports.get(tagidx).getTagType());
+		}
+		WasmTagSection tagSection = (WasmTagSection) sectionMap.get(WasmSectionId.SEC_TAG);
+		int local = tagidx - imports.size();
+		if (tagSection == null || local >= tagSection.getTagCount()) {
+			return null;
+		}
+		return getType(tagSection.getTypeIdx(local));
 	}
 
 	public WasmGlobalType getGlobalType(int globalidx) {
