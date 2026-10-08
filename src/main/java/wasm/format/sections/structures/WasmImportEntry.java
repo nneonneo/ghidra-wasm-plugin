@@ -37,6 +37,8 @@ public class WasmImportEntry implements StructConverter {
 	private WasmTableType tableEntry;
 	private WasmResizableLimits memoryEntry;
 	private WasmGlobalType globalEntry;
+	private int tagAttribute;
+	private LEB128Info tagEntry;
 
 	private long startOffset, endOffset;
 
@@ -58,6 +60,10 @@ public class WasmImportEntry implements StructConverter {
 		case EXT_GLOBAL:
 			globalEntry = new WasmGlobalType(reader);
 			break;
+		case EXT_TAG:	// tagtype: an attribute byte (0 = exception) and a type index
+			tagAttribute = reader.readNextUnsignedByte();
+			tagEntry = reader.readNext(LEB128Info::unsigned);
+			break;
 		default:
 			break;
 		}
@@ -73,6 +79,13 @@ public class WasmImportEntry implements StructConverter {
 			throw new IllegalArgumentException("Cannot get function type of non-function import");
 		}
 		return (int) functionEntry.asLong();
+	}
+
+	public int getTagType() {
+		if (kind != WasmExternalKind.EXT_TAG) {
+			throw new IllegalArgumentException("Cannot get tag type of non-tag import");
+		}
+		return (int) tagEntry.asLong();
 	}
 
 	public WasmTableType getTableType() {
@@ -127,6 +140,10 @@ public class WasmImportEntry implements StructConverter {
 			break;
 		case EXT_MEMORY:
 			builder.add(memoryEntry, "type");
+			break;
+		case EXT_TAG:
+			builder.add(BYTE, "attribute");
+			builder.addUnsignedLeb128(tagEntry, "type");
 			break;
 		case EXT_GLOBAL:
 			builder.add(globalEntry, "type");

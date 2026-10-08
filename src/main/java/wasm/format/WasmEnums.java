@@ -30,7 +30,8 @@ public class WasmEnums {
 		EXT_FUNCTION,
 		EXT_TABLE,
 		EXT_MEMORY,
-		EXT_GLOBAL
+		EXT_GLOBAL,
+		EXT_TAG		// exception handling: import/export kind 4
 	}
 
 	public enum ValType {

@@ -69,6 +69,14 @@ define pcodeop memory_init;
 define pcodeop data_drop;
 define pcodeop memory_copy;
 define pcodeop memory_fill;
+# Legacy exception handling and threads (added for wasm-ghidra; not in upstream at 4708d290)
+define pcodeop wasm_exception_caught;
+define pcodeop wasm_exception_payload;
+define pcodeop wasm_throw;
+define pcodeop wasm_rethrow;
+define pcodeop memory_atomic_notify;
+define pcodeop memory_atomic_wait32;
+define pcodeop memory_atomic_wait64;
 
 @include "Leb128.sinc"
 
@@ -303,6 +311,74 @@ macro doBranch(br_target) {
 	pushCallOther(&o0);
 }
 
+## Tail calls: call, then return what the callee returned (its outputs are already in the output registers)
+:return_call br_target is opc=0x12; ULeb128; br_target; ctx_is_directive=0 {
+	LR = inst_next;
+	callPrologueCallOther(&i0);
+	call br_target;
+	return [LR];
+}
+:return_call_indirect "type="^typeidx tableref is opc=0x13; typeidx; tableref; sp1_32; ctx_is_directive=0 {
+	addr:8 = &tableref + zext(sp1_32) * 4;
+	val:4 = *[table] addr;
+	LR = inst_next;
+	callPrologueCallOther(&i0);
+	call [val];
+	return [LR];
+}
+
+## Legacy exception handling (try / catch / catch_all / throw / rethrow / delegate). A try is a block; when it has a
+## handler (ctx_case_index=1, set by the pre-analyzer) it also dispatches to its FIRST handler on
+## wasm_exception_caught(), passing the exception's payload when it is a single value (ctx_operand_size). Later
+## handlers are reached only by exceptions, so the decompiler does not show them. catch/catch_all end the preceding
+## code with a branch to the end of the try, like else.
+:try "blocktype="^ULeb128 is opc=0x06; ULeb128; ctx_case_index=0; ctx_is_directive=0 {
+}
+:try "blocktype="^ULeb128 br_target is opc=0x06; ULeb128; br_target; ctx_case_index=1; ctx_operand_size=0; ctx_is_directive=0 {
+	nop();
+	local caught:1 = wasm_exception_caught();
+	if (caught == 0) goto inst_next;
+	goto br_target;
+}
+:try "blocktype="^ULeb128 br_target is opc=0x06; ULeb128; br_target; sp0_32; ctx_case_index=1; ctx_operand_size=4; ctx_is_directive=0 {
+	nop();
+	local caught:1 = wasm_exception_caught();
+	if (caught == 0) goto inst_next;
+	sp0_32 = wasm_exception_payload();
+	goto br_target;
+}
+:try "blocktype="^ULeb128 br_target is opc=0x06; ULeb128; br_target; sp0_64; ctx_case_index=1; ctx_operand_size=8; ctx_is_directive=0 {
+	nop();
+	local caught:1 = wasm_exception_caught();
+	if (caught == 0) goto inst_next;
+	sp0_64 = wasm_exception_payload();
+	goto br_target;
+}
+:catch "tag="^ULeb128 br_target is opc=0x07; ULeb128; br_target; ctx_is_directive=0 {
+	doBranch(br_target);
+}
+:catch_all br_target is opc=0x19; br_target; ctx_is_directive=0 {
+	doBranch(br_target);
+}
+:throw "tag="^ULeb128 is opc=0x08; ULeb128; ctx_operand_size=0; ctx_is_directive=0 {
+	wasm_throw(ULeb128:4);
+	trap();
+}
+:throw "tag="^ULeb128 is opc=0x08; ULeb128; sp1_32; ctx_operand_size=4; ctx_is_directive=0 {
+	wasm_throw(ULeb128:4, sp1_32);
+	trap();
+}
+:throw "tag="^ULeb128 is opc=0x08; ULeb128; sp1_64; ctx_operand_size=8; ctx_is_directive=0 {
+	wasm_throw(ULeb128:4, sp1_64);
+	trap();
+}
+:rethrow ULeb128 is opc=0x09; ULeb128; ctx_is_directive=0 {
+	wasm_rethrow(ULeb128:4);
+	trap();
+}
+:delegate ULeb128 is opc=0x18; ULeb128; ctx_is_directive=0 {
+}
+
 ## Reference Instructions
 :ref.null valtype is opc=0xd0; valtype; sp0_32; ctx_is_directive=0 {
 	sp0_32 = 0;
@@ -501,3 +577,5 @@ select_valtype: valtype is valtype & bytev=0x7b; sp1_32; sp2_128; sp3_128 {
 
 @include "BasicOps.sinc"
 @include "VectorOps.sinc"
+@include "AtomicOps.sinc"
+@include "RelaxedSimdOps.sinc"
