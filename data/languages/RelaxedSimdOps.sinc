@@ -1,0 +1,164 @@
+# Relaxed SIMD (0xFD 0x100-0x113). Added for wasm-ghidra; generated. Like the plugin's other vector instructions they
+# are callothers on 128-bit stack slots (operands top-first, as in VectorOps.sinc).
+
+@define NAME "opc2_256"
+@define N0 0
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_257"
+@define N0 1
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_258"
+@define N0 2
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_259"
+@define N0 3
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_260"
+@define N0 4
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_261"
+@define N0 5
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_262"
+@define N0 6
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_263"
+@define N0 7
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_264"
+@define N0 8
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_265"
+@define N0 9
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_266"
+@define N0 10
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_267"
+@define N0 11
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_268"
+@define N0 12
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_269"
+@define N0 13
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_270"
+@define N0 14
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_271"
+@define N0 15
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_272"
+@define N0 16
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_273"
+@define N0 17
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_274"
+@define N0 18
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+@define NAME "opc2_275"
+@define N0 19
+@define N1 2
+@include "Leb128_opc2_2b.sinc"
+
+define pcodeop i8x16_relaxed_swizzle;
+:i8x16.relaxed_swizzle is opc=0xFD; opc2_256; sp1_128; sp2_128; ctx_is_directive=0 {
+    sp2_128 = i8x16_relaxed_swizzle(sp1_128, sp2_128);
+}
+define pcodeop i32x4_relaxed_trunc_f32x4_s;
+:i32x4.relaxed_trunc_f32x4_s is opc=0xFD; opc2_257; sp1_128; ctx_is_directive=0 {
+    sp1_128 = i32x4_relaxed_trunc_f32x4_s(sp1_128);
+}
+define pcodeop i32x4_relaxed_trunc_f32x4_u;
+:i32x4.relaxed_trunc_f32x4_u is opc=0xFD; opc2_258; sp1_128; ctx_is_directive=0 {
+    sp1_128 = i32x4_relaxed_trunc_f32x4_u(sp1_128);
+}
+define pcodeop i32x4_relaxed_trunc_f64x2_s_zero;
+:i32x4.relaxed_trunc_f64x2_s_zero is opc=0xFD; opc2_259; sp1_128; ctx_is_directive=0 {
+    sp1_128 = i32x4_relaxed_trunc_f64x2_s_zero(sp1_128);
+}
+define pcodeop i32x4_relaxed_trunc_f64x2_u_zero;
+:i32x4.relaxed_trunc_f64x2_u_zero is opc=0xFD; opc2_260; sp1_128; ctx_is_directive=0 {
+    sp1_128 = i32x4_relaxed_trunc_f64x2_u_zero(sp1_128);
+}
+define pcodeop f32x4_relaxed_madd;
+:f32x4.relaxed_madd is opc=0xFD; opc2_261; sp1_128; sp2_128; sp3_128; ctx_is_directive=0 {
+    sp3_128 = f32x4_relaxed_madd(sp1_128, sp2_128, sp3_128);
+}
+define pcodeop f32x4_relaxed_nmadd;
+:f32x4.relaxed_nmadd is opc=0xFD; opc2_262; sp1_128; sp2_128; sp3_128; ctx_is_directive=0 {
+    sp3_128 = f32x4_relaxed_nmadd(sp1_128, sp2_128, sp3_128);
+}
+define pcodeop f64x2_relaxed_madd;
+:f64x2.relaxed_madd is opc=0xFD; opc2_263; sp1_128; sp2_128; sp3_128; ctx_is_directive=0 {
+    sp3_128 = f64x2_relaxed_madd(sp1_128, sp2_128, sp3_128);
+}
+define pcodeop f64x2_relaxed_nmadd;
+:f64x2.relaxed_nmadd is opc=0xFD; opc2_264; sp1_128; sp2_128; sp3_128; ctx_is_directive=0 {
+    sp3_128 = f64x2_relaxed_nmadd(sp1_128, sp2_128, sp3_128);
+}
+define pcodeop i8x16_relaxed_laneselect;
+:i8x16.relaxed_laneselect is opc=0xFD; opc2_265; sp1_128; sp2_128; sp3_128; ctx_is_directive=0 {
+    sp3_128 = i8x16_relaxed_laneselect(sp1_128, sp2_128, sp3_128);
+}
+define pcodeop i16x8_relaxed_laneselect;
+:i16x8.relaxed_laneselect is opc=0xFD; opc2_266; sp1_128; sp2_128; sp3_128; ctx_is_directive=0 {
+    sp3_128 = i16x8_relaxed_laneselect(sp1_128, sp2_128, sp3_128);
+}
+define pcodeop i32x4_relaxed_laneselect;
+:i32x4.relaxed_laneselect is opc=0xFD; opc2_267; sp1_128; sp2_128; sp3_128; ctx_is_directive=0 {
+    sp3_128 = i32x4_relaxed_laneselect(sp1_128, sp2_128, sp3_128);
+}
+define pcodeop i64x2_relaxed_laneselect;
+:i64x2.relaxed_laneselect is opc=0xFD; opc2_268; sp1_128; sp2_128; sp3_128; ctx_is_directive=0 {
+    sp3_128 = i64x2_relaxed_laneselect(sp1_128, sp2_128, sp3_128);
+}
+define pcodeop f32x4_relaxed_min;
+:f32x4.relaxed_min is opc=0xFD; opc2_269; sp1_128; sp2_128; ctx_is_directive=0 {
+    sp2_128 = f32x4_relaxed_min(sp1_128, sp2_128);
+}
+define pcodeop f32x4_relaxed_max;
+:f32x4.relaxed_max is opc=0xFD; opc2_270; sp1_128; sp2_128; ctx_is_directive=0 {
+    sp2_128 = f32x4_relaxed_max(sp1_128, sp2_128);
+}
+define pcodeop f64x2_relaxed_min;
+:f64x2.relaxed_min is opc=0xFD; opc2_271; sp1_128; sp2_128; ctx_is_directive=0 {
+    sp2_128 = f64x2_relaxed_min(sp1_128, sp2_128);
+}
+define pcodeop f64x2_relaxed_max;
+:f64x2.relaxed_max is opc=0xFD; opc2_272; sp1_128; sp2_128; ctx_is_directive=0 {
+    sp2_128 = f64x2_relaxed_max(sp1_128, sp2_128);
+}
+define pcodeop i16x8_relaxed_q15mulr_s;
+:i16x8.relaxed_q15mulr_s is opc=0xFD; opc2_273; sp1_128; sp2_128; ctx_is_directive=0 {
+    sp2_128 = i16x8_relaxed_q15mulr_s(sp1_128, sp2_128);
+}
+define pcodeop i16x8_relaxed_dot_i8x16_i7x16_s;
+:i16x8.relaxed_dot_i8x16_i7x16_s is opc=0xFD; opc2_274; sp1_128; sp2_128; ctx_is_directive=0 {
+    sp2_128 = i16x8_relaxed_dot_i8x16_i7x16_s(sp1_128, sp2_128);
+}
+define pcodeop i32x4_relaxed_dot_i8x16_i7x16_add_s;
+:i32x4.relaxed_dot_i8x16_i7x16_add_s is opc=0xFD; opc2_275; sp1_128; sp2_128; sp3_128; ctx_is_directive=0 {
+    sp3_128 = i32x4_relaxed_dot_i8x16_i7x16_add_s(sp1_128, sp2_128, sp3_128);
+}

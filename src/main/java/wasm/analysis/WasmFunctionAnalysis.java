@@ -142,6 +142,11 @@ public class WasmFunctionAnalysis {
 			}
 		}
 
+		/** Mark this try instruction as dispatching to a handler (its branch target). */
+		public void setTryHandler(Address address) {
+			setRegister(address, REG_CASE_INDEX, 1);
+		}
+
 		/** Mark this global.* instruction as operating on the C stack pointer. */
 		public void setIsGlobalSp(Address address, boolean value) {
 			setRegister(address, REG_IS_GLOBAL_SP, value ? 1 : 0);
@@ -217,7 +222,9 @@ public class WasmFunctionAnalysis {
 		FUNCTION,
 		BLOCK,
 		IF,
-		LOOP
+		LOOP,
+		TRY,	/* legacy exception handling: the try body */
+		CATCH	/* a catch or catch_all handler of a try */
 	}
 
 	private class ControlFrame {
@@ -229,6 +236,7 @@ public class WasmFunctionAnalysis {
 		List<Address> branchAddresses = new ArrayList<>();
 		boolean unreachable = false;
 		boolean hasElse = false;
+		boolean hasHandler = false;
 
 		public ControlFrame(Address address, BlockType blockType) {
 			this.startAddress = address;
@@ -451,6 +459,41 @@ public class WasmFunctionAnalysis {
 		popValue(instAddress, ValType.i32);
 	}
 
+	/**
+	 * catch / catch_all: like else, the instruction ends the try body (or the previous handler) with a branch to the
+	 * end of the try. The handler that follows starts with the try's initial stack plus the exception's payload. The
+	 * try instruction dispatches to its first handler only; later handlers are reached by exceptions alone.
+	 */
+	private void beginHandler(Address instAddress, Address handlerStart, ValType[] payload) {
+		ControlFrame block = popBlock(instAddress);
+		if (block.blockKind != BlockKind.TRY && block.blockKind != BlockKind.CATCH) {
+			throw new ValidationException(instAddress, "catch without matching try");
+		}
+		block.addBranch(instAddress);
+		if (!block.hasHandler) {
+			block.hasHandler = true;
+			contextreg.setBranchTarget(block.startAddress, handlerStart);
+			contextreg.setTryHandler(block.startAddress);
+			if (payload.length == 1 && block.blockType.params.length == 0 && payload[0].getSize() <= 8) {
+				contextreg.setOperandSize(block.startAddress, payload[0]);
+			}
+		}
+		block.blockKind = BlockKind.CATCH;
+		block.unreachable = false;
+		controlStack.add(block);
+		pushValues(instAddress, payload);
+	}
+
+	private ValType[] tagPayload(WasmAnalysis analysis, long tagidx) {
+		WasmFuncType tagType = analysis.getTagType((int) tagidx);
+		return tagType == null ? new ValType[0] : tagType.getParamTypes();
+	}
+
+	/** The value type of an atomic read-modify-write group member: i32, i64, i32 8u, i32 16u, i64 8u, i64 16u, i64 32u. */
+	private static ValType atomicType(int member) {
+		return (member == 0 || member == 2 || member == 3) ? ValType.i32 : ValType.i64;
+	}
+
 	private void unaryOp(Address instAddress, ValType srcType, ValType destType) {
 		popValue(instAddress, srcType);
 		pushValue(instAddress, destType);
@@ -510,6 +553,46 @@ public class WasmFunctionAnalysis {
 			pushBlock(instAddress, block);
 			break;
 		}
+		case 0x06: /* try bt (legacy exception handling) */ {
+			BlockType blocktype = new BlockType(analysis, readSignedLeb128(reader));
+			popValues(instAddress, blocktype.params);
+			pushBlock(instAddress, this.new ControlFrame(instAddress, BlockKind.TRY, blocktype, valueStack));
+			break;
+		}
+		case 0x07: /* catch x */ {
+			ValType[] payload = tagPayload(analysis, readLeb128(reader));
+			beginHandler(instAddress, func.getStartAddr().add(reader.getPointerIndex()), payload);
+			break;
+		}
+		case 0x19: /* catch_all */ {
+			beginHandler(instAddress, func.getStartAddr().add(reader.getPointerIndex()), new ValType[0]);
+			break;
+		}
+		case 0x08: /* throw x */ {
+			ValType[] payload = tagPayload(analysis, readLeb128(reader));
+			if (payload.length == 1 && payload[0].getSize() <= 8) {
+				contextreg.setOperandSize(instAddress, payload[0]);
+			}
+			popValues(instAddress, payload);
+			markUnreachable(instAddress);
+			break;
+		}
+		case 0x09: /* rethrow l */ {
+			readLeb128(reader);
+			markUnreachable(instAddress);
+			break;
+		}
+		case 0x18: /* delegate l: ends a try like end; its exceptions go to an outer handler */ {
+			readLeb128(reader);
+			ControlFrame block = popBlock(instAddress);
+			if (block.blockKind != BlockKind.TRY) {
+				throw new ValidationException(instAddress, "delegate without matching try");
+			}
+			pushValues(instAddress, block.blockType.returns);
+			block.setEnd(instAddress);
+			break;
+		}
+
 		case 0x0B: /* end */ {
 			ControlFrame block = popBlock(instAddress);
 			// this stack effect will only be used by the final end
@@ -598,6 +681,31 @@ public class WasmFunctionAnalysis {
 			popValues(instAddress, params);
 			setStackEffect(instAddress, valueStack.size(), params, valueStack.size(), returns);
 			pushValues(instAddress, returns);
+			break;
+		}
+
+		case 0x12: /* return_call x (tail calls) */ {
+			long funcidx = readLeb128(reader);
+			WasmFuncSignature targetFunc = analysis.getFunction((int) funcidx);
+			ValType[] params = targetFunc.getParams();
+			popValues(instAddress, params);
+			setStackEffect(instAddress, valueStack.size(), params, valueStack.size(), targetFunc.getReturns());
+			contextreg.setBranchTarget(instAddress, targetFunc.getStartAddr());
+			markUnreachable(instAddress);
+			break;
+		}
+		case 0x13: /* return_call_indirect x y */ {
+			long typeidx = readLeb128(reader);
+			long tableidx = readLeb128(reader);
+			if (analysis.getTableType((int) tableidx) != ValType.funcref) {
+				throw new ValidationException(instAddress, "return_call_indirect does not reference a function table");
+			}
+			WasmFuncType type = analysis.getType((int) typeidx);
+			popValue(instAddress, ValType.i32);
+			ValType[] params = type.getParamTypes();
+			popValues(instAddress, params);
+			setStackEffect(instAddress, valueStack.size(), params, valueStack.size(), type.getReturnTypes());
+			markUnreachable(instAddress);
 			break;
 		}
 
@@ -1473,9 +1581,77 @@ public class WasmFunctionAnalysis {
 			case 0xFF: /* f64x2.convert_low_i32x4_u */
 				unaryOp(instAddress, ValType.v128, ValType.v128);
 				break;
+			case 0x100: /* i8x16.relaxed_swizzle */
+			case 0x10D: /* f32x4.relaxed_min */
+			case 0x10E: /* f32x4.relaxed_max */
+			case 0x10F: /* f64x2.relaxed_min */
+			case 0x110: /* f64x2.relaxed_max */
+			case 0x111: /* i16x8.relaxed_q15mulr_s */
+			case 0x112: /* i16x8.relaxed_dot_i8x16_i7x16_s */
+				binaryOp(instAddress, ValType.v128, ValType.v128);
+				break;
+			case 0x101: /* i32x4.relaxed_trunc_f32x4_s */
+			case 0x102: /* i32x4.relaxed_trunc_f32x4_u */
+			case 0x103: /* i32x4.relaxed_trunc_f64x2_s_zero */
+			case 0x104: /* i32x4.relaxed_trunc_f64x2_u_zero */
+				unaryOp(instAddress, ValType.v128, ValType.v128);
+				break;
+			case 0x105: /* f32x4.relaxed_madd */
+			case 0x106: /* f32x4.relaxed_nmadd */
+			case 0x107: /* f64x2.relaxed_madd */
+			case 0x108: /* f64x2.relaxed_nmadd */
+			case 0x109: /* i8x16.relaxed_laneselect */
+			case 0x10A: /* i16x8.relaxed_laneselect */
+			case 0x10B: /* i32x4.relaxed_laneselect */
+			case 0x10C: /* i64x2.relaxed_laneselect */
+			case 0x113: /* i32x4.relaxed_dot_i8x16_i7x16_add_s */
+				popValue(instAddress, ValType.v128);
+				popValue(instAddress, ValType.v128);
+				popValue(instAddress, ValType.v128);
+				pushValue(instAddress, ValType.v128);
+				break;
 			default:
 				Msg.warn(this, "Illegal opcode 0xfd " + String.format("0x%02x", opcode2) + " at " + instAddress);
 				break;
+			}
+			break;
+		}
+		case 0xFE: { /* threads: atomic memory instructions */
+			int opcode2 = reader.readNextUnsignedVarIntExact(LEB128::unsigned);
+			if (opcode2 == 0x03) { /* atomic.fence 0x00 */
+				reader.readNextUnsignedByte();
+				break;
+			}
+			readLeb128(reader); /* align */
+			readLeb128(reader); /* offset */
+			if (opcode2 == 0x00) { /* memory.atomic.notify */
+				popValue(instAddress, ValType.i32);
+				popValue(instAddress, ValType.i32);
+				pushValue(instAddress, ValType.i32);
+			} else if (opcode2 == 0x01 || opcode2 == 0x02) { /* memory.atomic.wait32 / wait64 */
+				popValue(instAddress, ValType.i64);
+				popValue(instAddress, opcode2 == 0x01 ? ValType.i32 : ValType.i64);
+				popValue(instAddress, ValType.i32);
+				pushValue(instAddress, ValType.i32);
+			} else if (opcode2 >= 0x10 && opcode2 <= 0x16) { /* loads */
+				popValue(instAddress, ValType.i32);
+				pushValue(instAddress, (opcode2 == 0x10 || opcode2 == 0x12 || opcode2 == 0x13) ? ValType.i32 : ValType.i64);
+			} else if (opcode2 >= 0x17 && opcode2 <= 0x1D) { /* stores */
+				popValue(instAddress, (opcode2 == 0x17 || opcode2 == 0x19 || opcode2 == 0x1A) ? ValType.i32 : ValType.i64);
+				popValue(instAddress, ValType.i32);
+			} else if (opcode2 >= 0x1E && opcode2 <= 0x47) { /* add, sub, and, or, xor, xchg */
+				ValType type = atomicType((opcode2 - 0x1E) % 7);
+				popValue(instAddress, type);
+				popValue(instAddress, ValType.i32);
+				pushValue(instAddress, type);
+			} else if (opcode2 >= 0x48 && opcode2 <= 0x4E) { /* cmpxchg */
+				ValType type = atomicType(opcode2 - 0x48);
+				popValue(instAddress, type);
+				popValue(instAddress, type);
+				popValue(instAddress, ValType.i32);
+				pushValue(instAddress, type);
+			} else {
+				Msg.warn(this, "Illegal opcode 0xfe " + String.format("0x%02x", opcode2) + " at " + instAddress);
 			}
 			break;
 		}
